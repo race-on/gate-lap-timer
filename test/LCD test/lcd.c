@@ -41,7 +41,8 @@ void lcd_init(void)
     
     lcd_writecommand(0x28);     // Function Set: 4-bit interface, 2 lines
 
-    lcd_writecommand(0x0f);     // Display and cursor on
+    //lcd_writecommand(0x0f);     // Display on, cursor on, blink on
+    lcd_writecommand(0x0C);     // Display on (bits 3, 2), cursor off (bit 1), blink off (bit 0)
 }
 
 /*

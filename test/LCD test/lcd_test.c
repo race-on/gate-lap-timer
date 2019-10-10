@@ -18,25 +18,10 @@ int main(void) {
         lcd_init();
         
         lcd_clearscreen();
+        lcd_writecommand(0);
         lcd_stringout(" RACE ON! @ USC");
         lcd_moveto(1,0);
-        lcd_stringout("    LCD Test");
-        // Use a state machine approach to organize your code
-        //   - Declare and initialize a variable to 
-        //     track what state you are in
-        
-    while (1) {               // Loop forever
-
-                // Use an outer if statement to select what state you are in
-                // Then inside each 'if' or 'else' block, perform the desired
-                // output operations and then sample the inputs to update
-                // the state for the next iteration
-        
-                
-                // Delay before we go to the next iteration of the loop
-                
-    }
-
-    return 0;   /* never reached */
+        lcd_stringout(">>> LCD Test");
+        return 0;   /* never reached */
 }
 
