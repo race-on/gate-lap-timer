@@ -36,6 +36,7 @@
 *.x86_64
 *.hex
 !lcd_test.hex
+!lcd_button_test.hex
 
 # Debug files
 *.dSYM/
