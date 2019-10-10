@@ -17,11 +17,13 @@ int main(void) {
         // Initialize the LCD
         lcd_init();
         
+        // Clear screen
         lcd_clearscreen();
-        lcd_writecommand(0);
+
+        //Print test text
         lcd_stringout(" RACE ON! @ USC");
         lcd_moveto(1,0);
-        lcd_stringout(">>> LCD Test");
-        return 0;   /* never reached */
+        lcd_stringout(">>> LCD Test <<<");
+        return 0;
 }
 
