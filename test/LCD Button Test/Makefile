@@ -1,7 +1,21 @@
 DEVICE     = atmega328p
 CLOCK      = 16000000
-# PROGRAMMER = -c arduino -b 115200 -P /dev/tty.usbmodem* # line for UNIX
-PROGRAMMER = -c arduino -b 115200 -P COM9 # line for Windows
+OSFLAG    :=
+PROGRAMMER =
+ifeq ($(OS),Windows_NT)
+	PROGRAMMER += -c arduino -b 115200 -P COM9 # line for Windows
+	OSFLAG += WIN
+else
+	UNAME_S := $(shell uname -s)
+	ifeq ($(UNAME_S),Darwin)
+		PROGRAMMER += -c arduino -b 115200 -P /dev/tty.usbmodem* # line for Mac
+		OSFLAG += OSX
+	endif
+	ifeq ($(UNAME_S),Linux)
+		PROGRAMMER += -c arduino -b 115200 -P /dev/ttyACM* # line for Linux
+		OSFLAG += LINUX
+	endif
+endif
 OBJECTS    = lcd_button_test.o lcd.o adc.o lcd_button.o
 FUSES      = -U hfuse:w:0xde:m -U lfuse:w:0xff:m -U efuse:w:0x05:m
 
@@ -12,7 +26,6 @@ COMPILE = avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
 
 # symbolic targets:
 all:	main.hex
-
 .c.o:
 	$(COMPILE) -c $< -o $@
 
@@ -27,6 +40,7 @@ all:	main.hex
 	$(COMPILE) -S $< -o $@
 
 flash:	all
+	@echo $(OSFLAG)
 	$(AVRDUDE) -U flash:w:main.hex:i
 
 fuse:
