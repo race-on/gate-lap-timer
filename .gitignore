@@ -37,6 +37,7 @@
 *.hex
 !lcd_test.hex
 !lcd_button_test.hex
+!raceon_gate_timer_PCINT_D3.hex
 
 # Debug files
 *.dSYM/
