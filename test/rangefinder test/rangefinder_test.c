@@ -5,95 +5,84 @@
 #include <string.h>
 #include <stdlib.h>
 #include "rangefinder.h"
-#include "lcd_button.h"
 #include "lcd.h"
 
-volatile unsigned char flag = 0;
-volatile unsigned char pinVal = 0;
+volatile unsigned char ECHO_flag = 0;
+volatile unsigned char timer_flag = 0;
+volatile unsigned char pinValB = 0;
 volatile unsigned long pulse_cnt = 0;
 char disp[17];
 
 int main()
 {
-    //Initialize rangefinder pins
-    DDRB |= (1<<PB3);
-    DDRD &=~(1<<PD3);
+    //rangefinder_init('B', 5, 4); // initialize rangefinder pins
+	DDRB |= (1<<PB5); // PB5 is output (for trig)
+	DDRB &=~(1<<PB4); // PB4 is input (for echo)
 
     //Initialize pin change interrupt to detect echo pulse
-    PCICR |= (1<<PCIE2);
-    PCMSK2|= (1<<PCINT19);
-    // Initialize time of flight counter
-    TCCR1B |= (1 << WGM12); // CTC 16b timer
-    TIMSK1 |= (1 << OCIE1A);
-    OCR1A |= 46400;
-    sei(); // enable interrupts
-
-    lcd_button_init();
+    PCICR |= (1<<PCIE0); //  enable PCINT on PORTB
+    PCMSK0|= (1<<PCINT4); // set PCINT mask for echo pin (PB4)
+	
+    // Initialize timer1 for rangefinder
+    TCCR1B |= (1 << WGM12); // enable CTC mode on timer1
+    TIMSK1 |= (1 << OCIE1A); // enable interrupt on timer1
+    OCR1A |= 46400; // for a 4 m range limit when prescaler set to 8(CS[2:0] = 010)
+   	
     lcd_init();
-    lcd_splashscreen();
+	lcd_clearscreen();
+	lcd_stringout(" RACE ON! @ USC");
+	lcd_moveto(1,0);
+	lcd_stringout("RANGEFINDER TEST");
     _delay_ms(1000);
+	lcd_clearscreen();
 
-    while(1) {
-        if(lcd_button_read() == select) {
-            _delay_us(10);
-            //while(lcd_button_read() == select){}
-            _delay_us(10);
-
-            // send trigger pulse for 10us
-            PORTB |= (1<<PB3);
-            _delay_us(10);
-            PORTB &=~(1<<PB3);
-
-            lcd_moveto(1,15);
-            lcd_writedata('t');
-            _delay_ms(1000);
-            lcd_moveto(1,15);
-            lcd_writedata(' ');
-        } else {
-            lcd_moveto(1,15);
-            lcd_writedata('n');
-            _delay_us(100);
-        }
-    }
-
+	sei(); // enable interrupts
+	
+	//send trigger pulse to rangefinder
+    PORTB |= (1<<PB5);
+	_delay_us(10);
+	PORTB &= ~(1<<PB5);
+	
+	while(timer_flag == 0) {}
+	snprintf(disp, 17, "%lu mm", (long)((pulse_cnt*5/58)) );
+	lcd_stringout(disp);
+	
     return 0;
 }
 
-ISR(PCINT2_vect)
+// invoked if the distance is more than 4m and timer1 expires.
+ISR(TIMER1_COMPA_vect)
 {
-    pinVal = PIND;
-    pinVal &= (1<<PD3);
-    if(pinVal) {
-        lcd_moveto(1,14);
-        lcd_writedata('p');
-        unsigned long disp1, disp2;
-        /*
-        if(flag == 0) {
-            TCNT1 = 0;
-            TCCR1B |= (1<<CS11); // start timer
-            flag = 1;
-        } else {
-            TCCR1B &= ~(1<<CS11);
-            pulse_cnt = TCNT1;
-            flag = 0;
+	TCCR1B &= ~((1<<CS11));//stops timer
+	ECHO_flag = 0;//sets flag to 0
+	TCNT1 = 0;//sets timer to start from 0 again
+}
 
-            disp1 = (pulse_cnt/2)/58;
-            disp2 = (pulse_cnt*5/58)%10;
-            snprintf(disp, 17, "%ld.%ld", disp1, disp2);
-            //lcd_clearscreen();
-            lcd_moveto(0,0);
-            lcd_stringout(disp);
-            lcd_moveto(1,0);
-            snprintf(disp, 17, "%ld", disp);
-            lcd_stringout(disp);
-        }
-        */
+
+ISR(PCINT0_vect)
+{
+	pinValB = PINB;
+	pinValB = (pinValB & (1<<PB4)) >> PB4;
+	
+	if (ECHO_flag == 0 && pinValB == 1) {
+        //set flag to one
+        ECHO_flag = 1;
+		timer_flag = 0;
+        TCNT1 = 0;
+        TCCR1B |= (1 << CS11); // start timer1 by setting prescaler
+    } else if (ECHO_flag == 1 && pinValB == 0) {
+        TCCR1B &= ~(1 << CS11); // stop timer1 by clearing prescaler
+		//set flag to zero
+        ECHO_flag = 0;        
+        timer_flag = 1;
+        pulse_cnt = TCNT1;
     }
 }
 
+
 /* Rangefinder connections
 VCC     = VCC
-TRIG    = Arduino pin D11   (AVR PB3)
-ECHO    = Arduino pin D3    (AVR PD3)
+TRIG    = Arduino pin D13   (AVR PB5)
+ECHO    = Arduino pin D12    (AVR PB4)
 GND     = GND
 */
