@@ -24,14 +24,14 @@ int main(void)
     PORTD |= (1<<PD3); // enable pullup resistor on PD3
 
     // Stopwatch timer (timer0)
-    TCCR1B |= (1 << WGM12); // Enable CTC mode
-    TIMSK1 |= (1 << OCIE1A); // Enable Timer1 interrupt
-    OCR1A = 15625; // for prescaler of 128, 
+    TCCR0A |= (1 << WGM01); // Enable CTC mode
+    TIMSK0 |= (1 << OCIE0A); // Enable Timer0 interrupt
+    OCR0A = 250; // for prescaler of 64, 250 gives us 1 ms interrupts
+    TCCR0B &= ~ ((1 << CS02) | (1 << CS01) | (1 << CS00)); // stop timer0
 
     // Pin (PD3) change interrupt
     PCICR |= (1 << PCIE2); // enable PCINT for port D
 	PCMSK2 |= (1 << PCINT19); // enable PD3 (D3)
-	sei(); // global interrupt enable
 
     // LCD initialization and splash
     lcd_init();
@@ -43,11 +43,13 @@ int main(void)
     _delay_ms(1000);
     lcd_clearscreen();
 
+	sei(); // global interrupt enable
+
     char watchTime[17];
     while (1) {
         if (dispChange == 1) {
             dispChange = 0;
-            snprintf(watchTime, 17, "%02d:%02d.%03d", m, s, ms);
+            snprintf(watchTime, 17, "%03d:%02d.%03d", m, s, ms);            
             lcd_moveto(1,0);
             lcd_stringout(watchTime);
         }
@@ -68,13 +70,32 @@ ISR(PCINT2_vect)
             ms = 0; s = 0; m = 0; // resetting watch time registers
             dispChange = 1;
             watchState = 1;
-            // run timer here by setting prescaler - SCR
+            TCCR0B |= ((1 << CS01) | (1 << CS00)); // run timer0 here by setting prescaler to 64
         } else if(watchState == 1) {
-            // stop timer here by clearing prescaler - SCR
+            TCCR0B &= ~ ((1 << CS02) | (1 << CS01) | (1 << CS00)); // stop timer0 here by clearing prescaler
             watchState = 0;
             lcd_moveto(0,0);
             lcd_writedata('S');
             dispChange = 1;
         }
+    }
+}
+
+ISR(TIMER0_COMPA_vect)
+{
+    if(watchState == 1) {
+        ms+=1;
+        if(ms > 999) {
+            ms = 0;
+            s+=1;
+            dispChange = 1;
+        }
+        if(s > 59) {
+            s = 0;
+            m+=1;
+        }
+    } else {
+        // timer shouldn't be running. Stop it.
+        TCCR0B &= ~ ((1 << CS02) | (1 << CS01) | (1 << CS00)); // stop timer0
     }
 }
