@@ -38,15 +38,19 @@ int main()
 
 	sei(); // enable interrupts
 	
-	//send trigger pulse to rangefinder
-    PORTB |= (1<<PB5);
-	_delay_us(10);
-	PORTB &= ~(1<<PB5);
-	
-	while(timer_flag == 0) {}
-	snprintf(disp, 17, "%lu mm", (long)((pulse_cnt*5/58)) );
-	lcd_stringout(disp);
-	
+	while(1) {
+		//send trigger pulse to rangefinder	
+		if(timer_flag == 1){
+			snprintf(disp, 17, "%lu mm", (long)((pulse_cnt*5/58)) );
+			lcd_moveto(0,0);
+			lcd_stringout(disp);
+			timer_flag = 0;
+		} else {
+			PORTB |= (1<<PB5);
+			_delay_us(10);
+			PORTB &= ~(1<<PB5);
+		}
+	}
     return 0;
 }
 
