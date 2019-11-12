@@ -38,6 +38,8 @@
 !lcd_test.hex
 !lcd_button_test.hex
 !raceon_gate_timer_PCINT_D3.hex
+!raceon_gate_timer_PCINT_D3_OLD.hex
+!raceon_gate_timer_rangefinder.hex
 
 # Debug files
 *.dSYM/

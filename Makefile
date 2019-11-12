@@ -25,5 +25,8 @@ AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE)
 COMPILE = avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
 
 # symbolic targets:
-PCINT: raceon_gate_timer_PCINT_D3.hex
+laser: raceon_gate_timer_PCINT_D3.hex
 	$(AVRDUDE) -U flash:w:raceon_gate_timer_PCINT_D3.hex:i
+
+rangefinder: raceon_gate_timer_rangefinder.hex
+	$(AVRDUDE) -U flash:w:raceon_gate_timer_rangefinder.hex:i
