@@ -20,7 +20,7 @@ volatile unsigned long pulse_mm_old = 0; // mm
 
 const unsigned long gate_trigger_distance = 1000; // mm
 const unsigned long gate_reset_distance = 1090; // mm
-volatile unsigned int debounce_timer = 0;
+volatile unsigned int debounce_timer = 1008;
 volatile unsigned char gate_car_state = 0;
 volatile unsigned char gate_car_state_old = 0;
 
@@ -106,6 +106,12 @@ ISR(PCINT1_vect)
 		lcd_moveto(0,0);
 		lcd_stringout("ARM ");
 		watchState = 0;
+	} else if(pinValC == 0 && watchState == 1) {
+		TCCR0B &= ~ ((1 << CS02) | (1 << CS01) | (1 << CS00)); // stop timer0 here by clearing prescaler		
+		lcd_moveto(0,0);
+		lcd_stringout("ARM ");
+		gate_car_state = 0;
+		watchState = 0;
 	}
 }
 
@@ -137,7 +143,7 @@ ISR(PCINT0_vect)
 			if(watchState == 0) {
 				lcd_moveto(0,0);
 				lcd_stringout("RUN ");
-				ms = 0; s = 0; m = 0; // resetting watch time registers
+				ms = 0; s = 0; m = 0; // resetting watch time registers				
 				dispChange = 1;
 				watchState = 1;
 				TCCR0B |= ((1 << CS01) | (1 << CS00)); // run timer0 here by setting prescaler to 64
