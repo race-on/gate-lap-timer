@@ -1,4 +1,4 @@
-# gate-lap-timer| RACE ON! @ USC
+# gate-lap-timer | RACE ON! @ USC
 Gate timer to measure lap time on race day.
 
 ## Required Hardware
@@ -22,7 +22,7 @@ Gate timer to measure lap time on race day.
 ## Operation Modes
 We can either operate the gate timer using a LASER switch or an ultrasonic rangefiner.
 
-### LASER swtich mode
+### LASER switch mode
 In this mode, we are simply using a swtiching digital signal to detect the passage of a car and start/stop the timer.
 - Connect the LCD shield to the Arduino UNO.
 - Attach the detector (Active High) to Arduino digital pin 3 (AVR pin PD3). You may use jumper cables for this.
