@@ -105,11 +105,15 @@ ISR(PCINT1_vect)
 	if(pinValC == 0 && watchState == -1) {
 		lcd_moveto(0,0);
 		lcd_stringout("ARM ");
+		ms = 0; s = 0; m = 0; // resetting watch time registers	
+		dispChange = 1;
 		watchState = 0;
 	} else if(pinValC == 0 && watchState == 1) {
 		TCCR0B &= ~ ((1 << CS02) | (1 << CS01) | (1 << CS00)); // stop timer0 here by clearing prescaler		
 		lcd_moveto(0,0);
 		lcd_stringout("ARM ");
+		ms = 0; s = 0; m = 0; // resetting watch time registers		
+		dispChange = 1;		
 		gate_car_state = 0;
 		watchState = 0;
 	}
