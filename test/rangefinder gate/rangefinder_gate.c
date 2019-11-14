@@ -16,9 +16,11 @@ volatile unsigned char pinValB = 0;
 volatile unsigned char pinValC = 0;
 volatile unsigned long pulse_cnt = 0;
 volatile unsigned long pulse_mm = 4000;
+volatile unsigned long pulse_mm_old = 0; // mm
 
-const unsigned long gate_trigger_distance = 150; // mm
-const unsigned long gate_reset_distance = 250; // mm
+const unsigned long gate_trigger_distance = 1000; // mm
+const unsigned long gate_reset_distance = 1090; // mm
+volatile unsigned int debounce_timer = 0;
 volatile unsigned char gate_car_state = 0;
 volatile unsigned char gate_car_state_old = 0;
 
@@ -128,6 +130,8 @@ ISR(PCINT0_vect)
         pulse_cnt = TCNT1;
 		pulse_mm = pulse_cnt*5/58;
 		
+		debounce_timer = m*60 + s;
+		
 		if (pulse_mm < gate_trigger_distance && gate_car_state == 0) {
 			gate_car_state = 1;
 			if(watchState == 0) {
@@ -144,9 +148,9 @@ ISR(PCINT0_vect)
 				lcd_stringout("STP ");
 				dispChange = 1;
 			}
-		} else if (pulse_mm > gate_reset_distance && gate_car_state == 1) {
+		} else if (pulse_mm > gate_reset_distance && gate_car_state == 1 && debounce_timer > 2) {
 			gate_car_state = 0;
-		}		
+		}				
     }
 }
 
